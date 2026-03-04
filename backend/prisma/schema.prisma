@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  nome          String
+  email         String         @unique
+  senhaHash     String?
+  provider      String
+  googleId      String?
+  createdAt     DateTime       @default(now())
+  subscriptions Subscription[]
+  materials     StudyMaterial[]
+  flashcards    Flashcard[]
+  quizzes       Quiz[]
+  progress      Progress?
+}
+
+model Subscription {
+  id                 String   @id @default(cuid())
+  userId             String
+  stripeCustomerId   String?
+  stripeSubscription String?
+  status             String   @default("inativa")
+  createdAt          DateTime @default(now())
+  user               User     @relation(fields: [userId], references: [id])
+}
+
+model StudyMaterial {
+  id        String      @id @default(cuid())
+  userId    String
+  titulo    String
+  tipo      String
+  conteudo  String
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id])
+  flashcards Flashcard[]
+  quizzes   Quiz[]
+}
+
+model Flashcard {
+  id          String   @id @default(cuid())
+  userId      String
+  materialId  String
+  pergunta    String
+  resposta    String
+  aprendido   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  material    StudyMaterial @relation(fields: [materialId], references: [id])
+}
+
+model Quiz {
+  id          String   @id @default(cuid())
+  userId      String
+  materialId  String
+  perguntas   Json
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  material    StudyMaterial @relation(fields: [materialId], references: [id])
+}
+
+model Progress {
+  userId             String   @id
+  diasSeguidos       Int      @default(0)
+  tempoTotalMinutos  Int      @default(0)
+  topicosDominados   Int      @default(0)
+  pontos             Int      @default(0)
+  nivel              Int      @default(1)
+  medalhas           Json?
+  user               User     @relation(fields: [userId], references: [id])
+}
+
+model Analytics {
+  id         String   @id @default(cuid())
+  evento     String
+  valor      Float?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+}
